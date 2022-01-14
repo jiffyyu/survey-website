@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <title>My Reading Habbits</title>
+    <style>
+        .section {
+            background-color: #87CEEB;
+        }
+
+        .container {
+            background-color: white;
+            display: block;
+            width: 70%;
+        }
+
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="section">
+        <div class="container has-text-centered">
+            <h1 class="title pt-5">
+                My Reading Habbits
+            </h1>
+
+            <div class="columns">
+                <form class="column has-text-left is-auto mx-6" method="POST" action="/form"
+                    onsubmit="postData(this);return false;">
+                    <div class="field mt-5">
+                        <label class="label">Name</label>
+                        <div class="control">
+                            <input name="name" class="input is-info is-hovered" type="text" placeholder="Name" required>
+
+                        </div>
+                    </div>
+
+                    <div class="field mt-5">
+                        <label class="label">Email</label>
+                        <div class="control ">
+                            <input name='email' class="input is-info is-hovered" type="email" placeholder="Email"
+                                value="@">
+                        </div>
+                    </div>
+                    <div class="field mt-5">
+                        <label class="label">What genre are you interested in?</label>
+                        <div class="select is-info is-hovered">
+                            <select name="genre" id="g">
+                            </select>
+                        </div>
+                    </div>
+                    <div class=" field mt-5">
+                        <label name="time" class="label">How much do you read?</label>
+                        <ul id="time">
+                            <li>
+                                <label for="once">Once a week</label>
+                                <input id="once" type="radio" name="time" value="Once a week" />
+                            </li>
+                            <li>
+                                <label for="two-three">2/3 days a week</label>
+                                <input id="two-three" type="radio" name="time" value="2/3 days a week" />
+                            </li>
+                            <li>
+                                <label for="everyday">Everyday</label>
+                                <input id="everyday" type="radio" name="time" value="Everyday" />
+                            </li>
+                        </ul>
+                    </div>
+                    <div class=" field mt-5">
+                        <label name="when" class="label">When do you read?</label>
+                        <ul id="when">
+                            <li>
+                                <label for="work">Going to work</label>
+                                <input id="work" type="radio" value="work" name="when" />
+                            </li>
+                            <li>
+                                <label for="home">At home</label>
+                                <input id="home" type="radio" value="home" name="when" />
+                            </li>
+                            <li>
+                                <label for="cafe">At a cafe</label>
+                                <input id="cafe" type="radio" value="cafe" name="when" />
+                            </li>
+                        </ul>
+                        <div class="field mt-5">
+                            <label class="label">Message</label>
+                            <div class="control">
+                                <textarea class="textarea is-info" placeholder="Textarea" rows="2"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="field is-grouped is-grouped-centered">
+                            <div class="control">
+                                <button type="submit" class="button is-info">Submit</button>
+                            </div>
+                            <div class="control">
+                                <button type="reset" class="button is-info is-light">Cancel</button>
+                            </div>
+                        </div>
+                </form>
+                <div class="column mt-6">
+                    <canvas id="chart1"></canvas>
+                </div>
+                <div class="column is-half has-text-centered">
+                    <canvas id="chart2"></canvas>
+                </div>
+                <div class="column">
+                    <canvas id="chart3"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        async function postData(elem) {
+
+            var response = await fetch(elem.action, {
+                method: elem.method,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(new FormData(elem))
+            });
+
+            console.log(response);
+
+            if (response.ok) {
+                var data = await response.json();
+                console.log('postData:', data);
+                await fetchData();
+            }
+        }
+        async function fetchData() {
+            var response = await fetch('/get', {
+                method: 'get',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
+
+            if (response.ok) {
+                var data = await response.json();
+                console.log('fetchData:', data);
+                renderData(data);
+            }
+        }
+
+        function sum(key, value) {
+            if (key[value]) {
+                (key[value])++;
+            } else {
+                (key[value]) = 1;
+            }
+        }
+        function renderData(data) {
+            const genre = {};
+            const time = {};
+            const when = {};
+            data.forEach(function (item) {
+                sum(genre, item.genre);
+                sum(time, item.time);
+                sum(when, item.when);
+            });
+            console.log('genre:', genre);
+            console.log('time:', time);
+            console.log('when:', when);
+            chart1(gArray, gArray.map(function (item) {
+                return genre[item] || 0;
+            }));
+            chart2(Object.keys(time), Object.values(time));
+            chart3(Object.keys(when), Object.values(when));
+        }
+        function addSelectOptions(id, options) {
+            var select = document.getElementById(id);
+            options.forEach(function (item) {
+                var option = document.createElement('option');
+                option.text = item;
+                option.value = item;
+                select.add(option);
+            });
+        }
+        const gArray = ['Science Fiction', 'Fantasy', 'Romance', 'Thriller', 'Mystery', 'Detective Story'];
+        addSelectOptions('g', gArray);
+        fetchData();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function chart1(labels, d) {
+            const data = {
+                labels: labels,
+                datasets: [{
+                    axis: 'y',
+                    label: 'What genre are you interested in?',
+                    data: d,
+                    fill: true,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+            const config = {
+                type: 'bar',
+                data,
+                options: {
+                    indexAxis: 'y',
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'What genre are you interested in?',
+                            font: {
+                                size: 24
+                            },
+                            padding: 20
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                }
+            };
+            const chartId = 'chart1';
+            const targetChart = Chart.getChart(chartId);
+            if (targetChart) {
+                targetChart.destroy();
+            }
+            new Chart(
+                document.getElementById(chartId),
+                config
+            );
+        }
+
+    </script>
+
+    <script>
+        function chart2(labels, d) {
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: 'When do you read?',
+                    data: d,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+            const config = {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'When do you read?',
+                            font: {
+                                size: 30
+                            },
+                            padding: 30
+                        },
+                        legend: {
+                            display: true
+                        }
+                    },
+                }
+
+            };
+            const chartId = 'chart2';
+            const targetChart = Chart.getChart(chartId);
+            if (targetChart) {
+                targetChart.destroy();
+            }
+            new Chart(
+                document.getElementById(chartId),
+                config
+            );
+        }
+    </script>
+    <script>
+        function chart3(labels, d) {
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: 'When do you read?',
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    data: d,
+                }]
+            };
+            const config = {
+                type: 'line',
+                data: data,
+                options: {}
+            };
+            const chartId = 'chart3';
+            const targetChart = Chart.getChart(chartId);
+            if (targetChart) {
+                targetChart.destroy();
+            }
+            new Chart(
+                document.getElementById(chartId),
+                config
+            );}
+    </script>
+</body>
+
+</html>
